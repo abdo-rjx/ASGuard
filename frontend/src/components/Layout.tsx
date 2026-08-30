@@ -31,7 +31,9 @@ export function Layout({ title, children }: { title: string; children: ReactNode
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">AS</div>
+          <div className="brand-mark">
+            <img src="/asguard-shield.png" alt="ASGuard shield logo" className="brand-logo" />
+          </div>
           <div>
             <div className="brand-name">
               <span className="accent">AS</span>GUARD

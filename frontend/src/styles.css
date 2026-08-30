@@ -144,11 +144,10 @@ body {
   border: 1px solid var(--gold-border);
   border-radius: var(--radius-sm);
   background: var(--gold-bg);
-  font-family: var(--font-mono);
-  font-size: 15px; font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 0.05em;
+  overflow: hidden;
+  padding: 3px;
 }
+.brand-logo { width: 100%; height: 100%; object-fit: contain; display: block; }
 .brand-name { font-family: var(--font-mono); font-size: 17px; font-weight: 700; letter-spacing: 0.10em; line-height: 1.2; }
 .brand-name .accent { color: var(--gold); }
 .brand-sub { font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--faint); }

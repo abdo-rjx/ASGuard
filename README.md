@@ -1,5 +1,9 @@
 # 🛡️ ASGuard — Bidirectional AI Security Firewall
 
+<p align="center">
+  <img src="assets/logo/asguard-lockup.svg" alt="ASGuard logo — gold shield with double-chevron bidirection mark" width="300" />
+</p>
+
 ![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-18%2B-61DAFB?logo=react&logoColor=black)
@@ -241,6 +245,7 @@ the **Security Testing** page (`POST /api/testing/run`) and the pytest regressio
 
 ```text
 asguard/
+├── assets/logo/               # brand — Stitch-generated shield mark (SVG/PNG) + hero screen
 ├── backend/                  # FastAPI service + security core (Python 3.12)
 │   ├── src/asguard/          #   input_guard · output_guard · risk · policy · gateway …
 │   ├── tests/                #   unit + integration + security-corpus suites

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ASGuard - Bidirectional AI Security Firewall</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#4f4536",
+                        "inverse-surface": "#e8e1dc",
+                        "border": "#2e2a25",
+                        "surface-tint": "#f4be55",
+                        "surface-container-highest": "#373431",
+                        "on-tertiary": "#68000f",
+                        "secondary-container": "#008077",
+                        "secondary-fixed": "#92f3e8",
+                        "on-primary": "#412d00",
+                        "surface-bright": "#3c3935",
+                        "on-tertiary-fixed-variant": "#92011a",
+                        "surface-container-high": "#2c2a26",
+                        "on-tertiary-fixed": "#410006",
+                        "text-muted": "#a39c8f",
+                        "background": "#151310",
+                        "on-primary-fixed-variant": "#5e4200",
+                        "surface-container-lowest": "#100e0b",
+                        "surface-container-low": "#1d1b18",
+                        "on-background": "#e8e1dc",
+                        "review-lilac": "#a99bd6",
+                        "text-primary": "#f0ede6",
+                        "on-surface": "#e8e1dc",
+                        "on-secondary-fixed-variant": "#00504a",
+                        "primary-fixed-dim": "#f4be55",
+                        "on-tertiary-container": "#990a1e",
+                        "on-primary-fixed": "#271900",
+                        "on-secondary-fixed": "#00201d",
+                        "gold-deep": "#8a6a2f",
+                        "surface-variant": "#373431",
+                        "primary": "#ffd280",
+                        "panel": "#1a1815",
+                        "primary-container": "#e9b44c",
+                        "on-secondary": "#003733",
+                        "on-error-container": "#ffdad6",
+                        "panel-active": "#2a2723",
+                        "tertiary-fixed-dim": "#ffb3b0",
+                        "surface-dim": "#151310",
+                        "surface": "#151310",
+                        "error-container": "#93000a",
+                        "tertiary-fixed": "#ffdad8",
+                        "on-error": "#690005",
+                        "gold-pale": "#f3d489",
+                        "on-primary-container": "#644600",
+                        "on-surface-variant": "#d3c5b0",
+                        "outline": "#9b8f7c",
+                        "tertiary": "#ffccc9",
+                        "panel-raised": "#211e1a",
+                        "background-deep": "#0b0a08",
+                        "secondary": "#75d7cc",
+                        "inverse-primary": "#7c5800",
+                        "inverse-on-surface": "#33302c",
+                        "tertiary-container": "#ffa4a1",
+                        "surface-container": "#221f1c",
+                        "primary-fixed": "#ffdea7",
+                        "error": "#ffb4ab",
+                        "secondary-fixed-dim": "#75d7cc",
+                        "border-strong": "#3d3831",
+                        "text-faint": "#6f6a5f",
+                        "on-secondary-container": "#dffffa"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "page-padding": "28px",
+                        "hairline": "1px",
+                        "gutter": "16px",
+                        "card-padding": "16px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "badge": ["JetBrains Mono"],
+                        "stat-value": ["JetBrains Mono"],
+                        "body": ["Inter"],
+                        "data-cell": ["JetBrains Mono"],
+                        "page-title": ["Inter"],
+                        "section-label": ["Inter"]
+                    },
+                    "fontSize": {
+                        "badge": ["10.5px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+                        "stat-value": ["27px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "data-cell": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "page-title": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "section-label": ["11.5px", { "lineHeight": "16px", "letterSpacing": "0.10em", "fontWeight": "600" }]
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #2e2a25 1px, transparent 1px), linear-gradient(to bottom, #2e2a25 1px, transparent 1px)"
+                    }
+                },
+            }
+        }
+    </script>
+<style>
+        .grid-bg {
+            background-size: 40px 40px;
+            opacity: 0.15;
+            mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+        }
+        
+        .pulse-slow {
+            animation: pulse-op 4s infinite alternate ease-in-out;
+        }
+        
+        @keyframes pulse-op {
+            0% { opacity: 0.8; }
+            100% { opacity: 1; filter: drop-shadow(0 0 12px rgba(233, 180, 76, 0.4)); }
+        }
+
+        .reveal-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: revealUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+
+        @keyframes revealUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-[#12100d] min-h-screen flex items-center justify-center relative overflow-hidden font-body text-text-primary m-0 p-0 selection:bg-primary-container selection:text-on-primary">
+<!-- Background Grid -->
+<div class="absolute inset-0 bg-grid-pattern grid-bg pointer-events-none z-0"></div>
+<!-- Central Composition -->
+<div class="relative z-10 flex flex-col items-center justify-center gap-6 max-w-[600px] w-full px-page-padding">
+<!-- Brand Mark -->
+<div class="reveal-up w-[120px] h-[120px] flex items-center justify-center pulse-slow">
+<img alt="ASGuard Shield Logo" class="w-full h-full object-contain drop-shadow-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbCRwamLDvv3esghnuhOm3rNdmIdyUapLCgBdx5_sKW8XJ7h7Z1VE3sTsMPZedUA837mF4xjKbEROGfqlXF5IH4GnEQeYj_-1fgRnj1323NyGSGbhb_QPcZU5-sXvUVtIqoYRVls4LqvFI3pVjHAuMh3fKOYaNQ46_vRbTdcuhSB8NnumBQAufU47SjPCx8tuk06LcZxj2C0vJD1OGz6INo6ul5lreQ8FLS77cAhzQU6pJ4GjSmJGIBbhtG56kTNFU2k95yUG1Jmhq"/>
+</div>
+<!-- Wordmark -->
+<h1 class="reveal-up delay-100 font-page-title text-text-primary font-bold text-[32px] leading-none tracking-[0.2em] uppercase text-center mt-2">
+            ASGUARD
+        </h1>
+<!-- Divider -->
+<div class="reveal-up delay-200 w-full max-w-[320px] h-hairline bg-secondary/30 mt-2 mb-2 relative overflow-hidden">
+<!-- Subtle scanner effect on divider -->
+<div class="absolute top-0 left-0 h-full w-1/4 bg-secondary/80 translate-x-[-100%] animate-[scan_3s_ease-in-out_infinite]"></div>
+</div>
+<!-- Tagline -->
+<p class="reveal-up delay-300 font-badge text-text-primary text-center tracking-widest uppercase opacity-80">
+            BIDIRECTIONAL <span class="text-secondary font-bold">AI</span> SECURITY FIREWALL
+        </p>
+</div>
+<style>
+        @keyframes scan {
+            0% { transform: translateX(-100%); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(400%); opacity: 0; }
+        }
+    </style>
+</body></html>
