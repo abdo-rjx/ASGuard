@@ -1,19 +1,42 @@
-# 🛡️ ASGuard — Bidirectional AI Security Firewall
+<div align="center">
 
-<p align="center">
-  <img src="assets/logo/asguard-lockup.svg" alt="ASGuard logo — gold shield with double-chevron bidirection mark" width="300" />
-</p>
+<img src="assets/logo/asguard-lockup.svg" alt="ASGuard — Bidirectional AI Security Firewall" width="360" />
 
-![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)
-![React](https://img.shields.io/badge/React-18%2B-61DAFB?logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-3178C6?logo=typescript&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-4169E1?logo=postgresql&logoColor=white)
-![Tests](https://img.shields.io/badge/29%20security%20cases-passing-18A058)
+### Security firewall for the AI you already have
 
-ASGuard is a production-oriented, model-agnostic **security middleware** that protects an
-existing AI application **in both directions** without replacing it and **without ever
-touching your enterprise data plane**.
+**Block threats coming in. Stop secrets leaking out.**
+No model replacement. No data-plane access. Single-digit milliseconds of added latency.
+
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](backend/pyproject.toml)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)](backend/pyproject.toml)
+[![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](frontend/package.json)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)](frontend/package.json)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-4169E1?logo=postgresql&logoColor=white)](docker-compose.yml)
+[![Security corpus](https://img.shields.io/badge/29%20security%20cases-passing-18A058)](backend/security_test_cases)
+
+[Quick start](#-quick-start) &nbsp;·&nbsp; [Architecture](#-how-it-works) &nbsp;·&nbsp; [Threats covered](#-what-asguard-protects-against) &nbsp;·&nbsp; [API reference](docs/api.md) &nbsp;·&nbsp; [Documentation](#-documentation)
+
+</div>
+
+---
+
+## Why ASGuard
+
+| | |
+|:---|:---|
+| 🛡️ **Bidirectional by design** | One gateway inspects **both** directions: every prompt going in, every response coming out. Input-only filters miss half the problem — leaked secrets and PII travel on the response path. |
+| ⚡ **Zero-LLM security** | Detection is deterministic — patterns, rules and heuristics. No ML model in the blocking path, no GPU, no extra inference cost, and decisions stay explainable. |
+| 🔌 **Drop-in, model-agnostic** | OpenAI-compatible endpoint. Point your client at ASGuard instead of your provider — **only the base URL changes**. Works with GPT, Llama, Mistral, or anything speaking the same protocol. |
+| 🧠 **Explainable decisions** | Every verdict ships with structured evidence (`detector`, `confidence`, `signals`) aggregated by a noisy-OR risk engine, and a deterministic policy engine makes the final call. No black box. |
+| 🔒 **Data-plane isolation** | ASGuard holds **zero credentials** for your databases, vector stores, CRMs or internal APIs. Your existing AI keeps its existing permissions. Non-negotiable by architecture. |
+
+ASGuard is **not** a chatbot, a RAG system, or a tool executor. It is a security
+enforcement layer sitting between your application and your existing AI — it inspects,
+scores, decides, sanitizes and audits, **nothing else**.
+
+---
+
+## 🔄 How it works
 
 ```mermaid
 flowchart LR
@@ -40,14 +63,6 @@ flowchart LR
 Every transaction goes through the same deterministic cycle:
 
 > **Intercept → Normalize → Detect → Score → Apply Policy → ALLOW / BLOCK / SANITIZE → Verify → Audit**
-
-ASGuard is **not** a chatbot, a RAG system, or a tool executor. It is a security
-enforcement layer sitting between your application and your existing AI — it inspects,
-scores, decides, sanitizes and audits, **nothing else**.
-
----
-
-## How it works
 
 ```mermaid
 sequenceDiagram
@@ -100,7 +115,7 @@ flowchart TD
 
 ---
 
-## The one non-negotiable rule
+## ⛔ The one non-negotiable rule
 
 ```mermaid
 flowchart LR
@@ -122,7 +137,7 @@ database stores only ASGuard metadata (policies, events, application config, set
 
 ---
 
-## Quick start
+## 🚀 Quick start
 
 ### Option A — Docker (recommended)
 
@@ -186,7 +201,7 @@ curl -s -i http://localhost:8000/v1/chat/completions \
 
 ---
 
-## Connecting your existing AI
+## 🔌 Connecting your existing AI
 
 Point your client at ASGuard instead of your AI provider. **Only the base URL changes.**
 
@@ -200,12 +215,26 @@ real provider's OpenAI-compatible URL, e.g. `https://api.example.com/v1`.
 
 ---
 
-## What ASGuard protects against
+## 🎯 What ASGuard protects against
 
-| Direction | Threats | Default action |
+### Inbound — prompt threats → **BLOCK**
+
+| Threat class | Examples |
+|---|---|
+| Prompt injection | *"ignore previous instructions…"*, instruction override |
+| Jailbreaks | DAN-style roleplay, policy circumvention |
+| System-prompt extraction | *"repeat everything above"* |
+| Obfuscation | leet speak, homoglyphs, letter-separation, invisible characters |
+| Suspicious intent | data exfiltration, credential harvesting, destructive commands |
+
+### Outbound — leak threats → **BLOCK / SANITIZE**
+
+| Data class | Examples | Default action |
 |---|---|---|
-| Input | Prompt injection, instruction override, jailbreaks (DAN etc.), system-prompt extraction, obfuscation (leet/homoglyph/letter-separation/invisible chars), suspicious intent (exfiltration, credential harvesting, destructive commands) | BLOCK |
-| Output | Secrets (API keys, passwords, tokens, JWTs), PII (phones, emails), financial data (Luhn-validated cards, IBANs, salary), confidential markers | BLOCK (secrets/confidential), SANITIZE/REDACT (PII/financial) |
+| Secrets | API keys (`sk-…`), passwords, tokens, JWTs | **BLOCK** |
+| PII | phone numbers, email addresses | **SANITIZE** (typed placeholders) |
+| Financial | Luhn-valid cards, IBANs, salary figures | **SANITIZE / REDACT** |
+| Confidential | internal markers, restricted headers | **BLOCK** |
 
 ```mermaid
 flowchart LR
@@ -224,7 +253,7 @@ final call. See `docs/architecture.md` and `docs/threat-model.md`.
 
 ---
 
-## Testing
+## ✅ Testing
 
 ```bash
 cd backend
@@ -241,7 +270,7 @@ the **Security Testing** page (`POST /api/testing/run`) and the pytest regressio
 
 ---
 
-## Repository layout
+## 📁 Repository layout
 
 ```text
 asguard/
@@ -260,7 +289,7 @@ asguard/
 
 ---
 
-## Documentation
+## 📚 Documentation
 
 | Doc | Contents |
 |---|---|
@@ -275,7 +304,7 @@ asguard/
 
 ---
 
-## Security posture highlights
+## 🛡️ Security posture highlights
 
 - **Fail safe**: a crashing detector → `BLOCK` (`fail_closed` default, configurable).
 - **Privacy by default**: raw prompts/responses are never persisted; content preview
@@ -285,7 +314,7 @@ asguard/
 - **Write-only secrets**: upstream API keys can be stored but are never returned by any API.
 - **Audit trail**: policy/application/settings changes are recorded with actor + detail.
 
-## Known limitations (MVP scope)
+## ⚠️ Known limitations (MVP scope)
 
 - Non-streaming only: `"stream": true` is rejected with a clear 400 (output inspection
   requires buffering the full response).
