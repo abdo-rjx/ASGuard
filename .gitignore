@@ -1,0 +1,26 @@
+# Cline MCP config contains the Stitch API key — never commit
+.cline/mcp_settings.json
+
+# Stitch design config embeds the same API key — never commit
+.stitch
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Env / secrets
+.env
+*.env.local
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store

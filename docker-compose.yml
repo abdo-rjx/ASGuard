@@ -1,0 +1,45 @@
+# ASGuard — docker-compose (development)
+#
+#   docker compose up --build
+#
+# Services:
+#   db       PostgreSQL for ASGuard's own metadata
+#   asguard  FastAPI backend + built dashboard (single container)
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: asguard
+      POSTGRES_PASSWORD: asguard_dev
+      POSTGRES_DB: asguard
+    # Host port 5433 to avoid clashing with a local PostgreSQL on 5432.
+    # The app connects to "db:5432" inside the compose network (unaffected).
+    ports:
+      - "5433:5432"
+    volumes:
+      - asguard_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U asguard -d asguard"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  asguard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://asguard:asguard_dev@db:5432/asguard
+      SEED_DEMO_DATA: "true"
+      DEMO_UPSTREAM_URL: http://asguard:8000/demo/upstream/v1
+      ASGUARD_ENVIRONMENT: production
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  asguard_pgdata:
