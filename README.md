@@ -1,38 +1,115 @@
-# ASGuard — Bidirectional AI Security Firewall
+# 🛡️ ASGuard — Bidirectional AI Security Firewall
+
+![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-18%2B-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-3178C6?logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-4169E1?logo=postgresql&logoColor=white)
+![Tests](https://img.shields.io/badge/29%20security%20cases-passing-18A058)
 
 ASGuard is a production-oriented, model-agnostic **security middleware** that protects an
 existing AI application **in both directions** without replacing it and **without ever
 touching your enterprise data plane**.
 
-```text
-            INPUT
-USER ────────────────▶ EXISTING AI
-        ASGuard inspection
+```mermaid
+flowchart LR
+    subgraph C["Client"]
+        U["App / User"]
+    end
 
-            OUTPUT
-USER ◀──────────────── EXISTING AI
-        ASGuard inspection
+    subgraph A["ASGuard — security firewall"]
+        direction TB
+        IG["Input Guard<br/>normalize → detect → score → policy"]
+        OG["Output Guard<br/>detect → score → policy → sanitize → verify"]
+    end
+
+    subgraph M["Existing AI (model-agnostic)"]
+        AI["OpenAI-compatible endpoint<br/>(GPT, Llama, Mistral, …)"]
+    end
+
+    U -- "prompt (input)" --> IG
+    IG -- "ALLOW" --> AI
+    AI -- "response (output)" --> OG
+    OG -- "clean result" --> U
 ```
 
-- **Intercept → Normalize → Detect → Score → Apply Policy → ALLOW / BLOCK / SANITIZE → Verify → Audit**
+Every transaction goes through the same deterministic cycle:
+
+> **Intercept → Normalize → Detect → Score → Apply Policy → ALLOW / BLOCK / SANITIZE → Verify → Audit**
 
 ASGuard is **not** a chatbot, a RAG system, or a tool executor. It is a security
-enforcement layer sitting between your application and your existing AI.
+enforcement layer sitting between your application and your existing AI — it inspects,
+scores, decides, sanitizes and audits, **nothing else**.
+
+---
+
+## How it works
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant G as ASGuard
+    participant A as AI
+
+    C->>G: POST /v1/chat/completions (prompt)
+    Note over G: Input Guard — normalize → detect → risk → policy
+    alt prompt is clean
+        G->>A: forwarded prompt (unchanged)
+        A->>G: model response
+        Note over G: Output Guard — parse → detect → risk → policy → sanitize → verify
+        alt response is clean
+            G-->>C: 200 ALLOW (byte-for-byte)
+        else sensitive spans found
+            G-->>C: 200 SANITIZE (spans redacted)
+        else critical leak
+            G-->>C: 403 BLOCK
+        end
+    else threat detected
+        G-->>C: 403 BLOCK (input threat)
+    end
+```
+
+Full transaction lifecycle:
+
+```mermaid
+flowchart TD
+    R["Client request"] --> RL["Rate limit + request id"]
+    RL --> N["Normalization<br/>(unicode / homoglyph / leet folding)"]
+    N --> D["Threat detection"]
+    D --> I["Intent analysis"]
+    I --> RS["Risk scoring<br/>(noisy-OR, 0–100)"]
+    RS --> P["Policy engine<br/>(deterministic — final call)"]
+    P -->|BLOCK| X1["403 BLOCK"]
+    P -->|ALLOW| UP["Existing AI"]
+    UP --> RP["Response parsing"]
+    RP --> OD["Output detection<br/>(secrets / PII / financial / confidential)"]
+    OD --> ORS["Output risk scoring"]
+    ORS --> OP["Output policy"]
+    OP -->|BLOCK| X2["403 BLOCK"]
+    OP -->|SANITIZE| SZ["Sanitizer<br/>(typed placeholders)"]
+    SZ --> V["Final verification<br/>(re-scan for residue)"]
+    V -->|residue| X3["403 BLOCK"]
+    V -->|clean| G["Deliver to client"]
+    OP -->|ALLOW| G
+```
 
 ---
 
 ## The one non-negotiable rule
 
-```text
-Correct:                          Forbidden:
+```mermaid
+flowchart LR
+    subgraph OK["Correct topology"]
+        direction LR
+        U1["User"] --> G1["ASGuard"] --> AI1["Existing AI"] --> D1["Database / RAG / Tools"]
+    end
 
-User                              ASGuard ──▶ Enterprise DB
- ↓                                 ASGuard ──▶ Enterprise Tools
-ASGuard
- ↓
-Existing AI
- ↓
-Database / RAG / Tools
+    subgraph NO["Forbidden — ASGuard never touches your data plane"]
+        direction LR
+        G2["ASGuard"] -. "no credentials" .-> DB2["Enterprise DB"]
+        G2 -. "no connectors" .-> T2["Enterprise Tools"]
+    end
 ```
 
 ASGuard holds **no credentials** for enterprise databases, vector stores, CRMs, ERPs or
@@ -126,6 +203,16 @@ real provider's OpenAI-compatible URL, e.g. `https://api.example.com/v1`.
 | Input | Prompt injection, instruction override, jailbreaks (DAN etc.), system-prompt extraction, obfuscation (leet/homoglyph/letter-separation/invisible chars), suspicious intent (exfiltration, credential harvesting, destructive commands) | BLOCK |
 | Output | Secrets (API keys, passwords, tokens, JWTs), PII (phones, emails), financial data (Luhn-validated cards, IBANs, salary), confidential markers | BLOCK (secrets/confidential), SANITIZE/REDACT (PII/financial) |
 
+```mermaid
+flowchart LR
+    EV["Detectors<br/>(evidence: detector, confidence, signals)"] --> RISK["Risk engine<br/>noisy-OR → 0–100"]
+    RISK --> POL["Policy engine<br/>(deterministic — final call)"]
+    POL -->|ALLOW| OK["Deliver untouched"]
+    POL -->|SANITIZE| SZ["Redact spans + re-scan"]
+    POL -->|REVIEW| RV["Escalate / alert"]
+    POL -->|BLOCK| BK["403 + event"]
+```
+
 Every decision is explainable: detectors produce structured evidence
 (`{detector, detected, confidence, signals}`), a deterministic risk engine aggregates it
 (noisy-OR, 0–100), and the **deterministic policy engine** — never a detector — makes the
@@ -147,6 +234,24 @@ npm run build      # type-check + production build
 The shipped security corpus lives in `backend/security_test_cases/` (29 YAML cases:
 input threats, output leaks, and benign false-positive guards). The same corpus powers
 the **Security Testing** page (`POST /api/testing/run`) and the pytest regression suite.
+
+---
+
+## Repository layout
+
+```text
+asguard/
+├── backend/                  # FastAPI service + security core (Python 3.12)
+│   ├── src/asguard/          #   input_guard · output_guard · risk · policy · gateway …
+│   ├── tests/                #   unit + integration + security-corpus suites
+│   ├── security_test_cases/  #   29 YAML regression cases (shared with dashboard)
+│   └── alembic/              #   database migrations
+├── frontend/                 # React + TypeScript dashboard (Vite)
+│   └── src/pages/            #   dashboard · policies · events · testing · settings …
+├── docs/                     # architecture · threat model · input/output security · APIs …
+├── docker-compose.yml        # app + PostgreSQL
+└── Dockerfile
+```
 
 ---
 
