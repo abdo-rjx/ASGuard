@@ -1,3 +1,4 @@
+import { Link, useParams } from "react-router-dom";
 import type { SecurityEvent } from "../types";
 import { api } from "../services/api";
 import { PipelineFlow } from "../components/PipelineFlow";
@@ -48,9 +49,9 @@ export function EventDetailBody({ event }: { event: SecurityEvent }) {
       <Card title="Transaction Lifecycle (Request Inspector)">
         <PipelineFlow stages={event.stages} />
         <div style={{ marginTop: 12 }}>
-          <a href={`/inspector/${event.id}`} style={{ color: "var(--info)", fontSize: 13 }}>
+          <Link to={`/inspector/${event.id}`} style={{ color: "var(--info)", fontSize: 13 }}>
             Open full request inspector →
-          </a>
+          </Link>
         </div>
       </Card>
 
@@ -66,9 +67,9 @@ export function EventDetailBody({ event }: { event: SecurityEvent }) {
 }
 
 export function EventDetailPage() {
-  // The :id param is read from the URL by React Router; fetch directly.
-  const id = window.location.pathname.split("/").pop() ?? "";
-  const { data: event, error, loading } = useApi<SecurityEvent>(() => api.event(id), [id]);
+  // The :id param is read from the route (works under HashRouter in the desktop app).
+  const { id } = useParams();
+  const { data: event, error, loading } = useApi<SecurityEvent>(() => api.event(id ?? ""), [id]);
   if (loading) return <span className="spinning" />;
   if (error || !event) return <div className="empty">Event not found.</div>;
   return <EventDetailBody event={event} />;

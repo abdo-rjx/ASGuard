@@ -1,4 +1,13 @@
-/** Minimal fetch-based API client for the ASGuard dashboard. */
+/**
+ * Minimal fetch-based API client for the ASGuard dashboard.
+ *
+ * Desktop mode (Tauri): talks to a user-configured ASGuard backend
+ * (default http://127.0.0.1:8000). If the backend is unreachable, requests
+ * transparently fall back to the built-in offline demo simulator and the
+ * connection pill in the sidebar switches from LIVE to DEMO.
+ *
+ * Browser mode: same-origin requests (vite dev proxy or FastAPI static mount).
+ */
 
 import type {
   Application,
@@ -11,25 +20,88 @@ import type {
   TestRunSummary,
   TimeBucket,
 } from "../types";
+import { connection } from "./connection";
+import { demoHandle } from "./demo";
 
-const BASE = "";
+/** True when running inside the Tauri desktop shell. */
+export const isDesktop =
+  typeof window !== "undefined" &&
+  (window.location.protocol === "tauri:" || window.location.hostname === "tauri.localhost");
+
+const BACKEND_KEY = "asguard.backendUrl";
+const DEMO_KEY = "asguard.forceDemo";
+
+const defaultBackendUrl = (): string => (isDesktop ? "http://127.0.0.1:8000" : "");
+
+let backendUrl = localStorage.getItem(BACKEND_KEY) ?? defaultBackendUrl();
+let forceDemo = localStorage.getItem(DEMO_KEY) === "1";
+
+/** Desktop-only connection configuration (persisted to localStorage). */
+export const desktopConfig = {
+  get backendUrl(): string {
+    return backendUrl;
+  },
+  setBackendUrl(url: string): void {
+    backendUrl = url.trim().replace(/\/+$/, "");
+    if (!backendUrl || backendUrl === defaultBackendUrl()) localStorage.removeItem(BACKEND_KEY);
+    else localStorage.setItem(BACKEND_KEY, backendUrl);
+  },
+  get forceDemo(): boolean {
+    return forceDemo;
+  },
+  setForceDemo(on: boolean): void {
+    forceDemo = on;
+    if (on) localStorage.setItem(DEMO_KEY, "1");
+    else localStorage.removeItem(DEMO_KEY);
+  },
+};
+
+/** Probe the configured backend; returns the resulting connection status. */
+export async function probeBackend(): Promise<"live" | "demo"> {
+  if (forceDemo) {
+    connection.set("demo");
+    return "demo";
+  }
+  try {
+    const res = await fetch(backendUrl + "/health", { signal: AbortSignal.timeout(3000) });
+    connection.set(res.ok ? "live" : "demo");
+    return res.ok ? "live" : "demo";
+  } catch {
+    connection.set("demo");
+    return "demo";
+  }
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(BASE + path, {
-    headers: { "Content-Type": "application/json" },
-    ...init,
-  });
-  if (!response.ok) {
-    let detail = response.statusText;
-    try {
-      const body = await response.json();
-      detail = body.detail ?? body.error?.message ?? JSON.stringify(body);
-    } catch {
-      /* keep statusText */
-    }
-    throw new Error(`${response.status}: ${detail}`);
+  if (forceDemo) {
+    connection.set("demo");
+    return demoHandle<T>(path, init);
   }
-  return (await response.json()) as T;
+  try {
+    const response = await fetch(backendUrl + path, {
+      headers: { "Content-Type": "application/json" },
+      ...init,
+    });
+    connection.set("live");
+    if (!response.ok) {
+      let detail = response.statusText;
+      try {
+        const body = await response.json();
+        detail = body.detail ?? body.error?.message ?? JSON.stringify(body);
+      } catch {
+        /* keep statusText */
+      }
+      throw new Error(`${response.status}: ${detail}`);
+    }
+    return (await response.json()) as T;
+  } catch (err) {
+    // Network-layer failure (backend down) → transparent offline demo mode.
+    if (err instanceof TypeError) {
+      connection.set("demo");
+      return demoHandle<T>(path, init);
+    }
+    throw err;
+  }
 }
 
 export const api = {

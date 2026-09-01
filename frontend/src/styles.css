@@ -88,6 +88,18 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 5px; border: 2px solid var(--bg-deep); }
 ::-webkit-scrollbar-thumb:hover { background: var(--gold-deep); }
 
+/* --- connection pills (LIVE / DEMO / searching) --- */
+.live-pill.demo-pill {
+  color: var(--gold);
+  border-color: var(--gold-border);
+  background: var(--gold-bg);
+}
+.live-pill.offline-pill {
+  color: var(--faint);
+  border-color: var(--border);
+  background: var(--panel-2);
+}
+
 /* --- keyframes --- */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(10px); }

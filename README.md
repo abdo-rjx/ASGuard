@@ -10,6 +10,7 @@ No model replacement. No data-plane access. Single-digit milliseconds of added l
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](backend/pyproject.toml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)](backend/pyproject.toml)
 [![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](frontend/package.json)
+[![Tauri 2 desktop](https://img.shields.io/badge/Desktop-Tauri%202-FFC131?logo=tauri&logoColor=black)](docs/desktop.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)](frontend/package.json)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-4169E1?logo=postgresql&logoColor=white)](docker-compose.yml)
 [![Security corpus](https://img.shields.io/badge/29%20security%20cases-passing-18A058)](backend/security_test_cases)
@@ -134,6 +135,29 @@ flowchart LR
 ASGuard holds **no credentials** for enterprise databases, vector stores, CRMs, ERPs or
 internal APIs. Your existing AI keeps its existing permissions. ASGuard's own PostgreSQL
 database stores only ASGuard metadata (policies, events, application config, settings).
+
+---
+
+## 🖥️ Desktop app (Fedora · Windows · macOS)
+
+The dashboard also ships as a **native desktop application** — same React UI,
+wrapped with **Tauri 2** so it uses your OS webview instead of bundling
+Chromium: **~40–80 MB RAM** and a **single-digit-MB installer**.
+
+- **Fedora/Linux** → `.rpm` / `.deb` / `.AppImage` · **Windows** → `.msi` · **macOS** → `.dmg`
+- Point it at any running ASGuard instance (`Settings → Desktop Connection`) —
+  the sidebar pill switches between **LIVE** (real backend) and **DEMO**
+  (built-in offline simulator), so the app is fully usable with or without a backend.
+
+```bash
+cd frontend
+npm install
+npm run desktop:build   # installers land in frontend/src-tauri/target/release/bundle/
+```
+
+Cross-platform installers are built automatically by
+[GitHub Actions](.github/workflows/desktop.yml) on every push. See
+[docs/desktop.md](docs/desktop.md) for details.
 
 ---
 
@@ -301,6 +325,7 @@ asguard/
 | [docs/api.md](docs/api.md) | Full HTTP API reference |
 | [docs/testing.md](docs/testing.md) | Test layout, corpus format, how to add cases |
 | [docs/deployment.md](docs/deployment.md) | Docker, env vars, migrations, production notes |
+| [docs/desktop.md](docs/desktop.md) | Desktop app (Tauri 2): platforms, build, backend connection |
 
 ---
 

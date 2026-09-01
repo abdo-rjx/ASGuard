@@ -16,6 +16,10 @@ node_modules/
 dist/
 *.tsbuildinfo
 
+# Rust / Tauri desktop shell
+frontend/src-tauri/target/
+frontend/src-tauri/gen/schemas/
+
 # Env / secrets
 .env
 *.env.local

@@ -1,8 +1,73 @@
-import { useEffect, useState } from "react";
-import { api } from "../services/api";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { api, desktopConfig, isDesktop, probeBackend } from "../services/api";
+import { connection } from "../services/connection";
 import { useApi } from "../hooks/useApi";
 import { Alert, Card } from "../components/ui";
 import type { SettingsDoc } from "../types";
+
+/** Desktop-only card: point the app at any ASGuard instance, or run offline. */
+function ConnectionCard() {
+  const status = useSyncExternalStore(connection.subscribe, connection.get);
+  const [url, setUrl] = useState(desktopConfig.backendUrl);
+  const [demo, setDemo] = useState(desktopConfig.forceDemo);
+  const [testing, setTesting] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  async function saveAndTest() {
+    setTesting(true);
+    setResult(null);
+    desktopConfig.setBackendUrl(url);
+    const next = await probeBackend();
+    setResult(next === "live" ? "Connected — live backend data." : "Backend unreachable — running on the offline demo simulator.");
+    setTesting(false);
+  }
+
+  const statusColor = status === "live" ? "var(--patina)" : status === "demo" ? "var(--gold)" : "var(--faint)";
+  const statusLabel = status === "live" ? "Connected to backend" : status === "demo" ? "Offline demo simulator" : "Searching…";
+
+  return (
+    <Card title="Desktop Connection">
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="field">
+          <label>
+            ASGuard backend URL
+            <span style={{ marginLeft: 10, color: statusColor, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              ● {statusLabel}
+            </span>
+          </label>
+          <input
+            value={url}
+            placeholder="http://127.0.0.1:8000"
+            onChange={(e) => setUrl(e.target.value)}
+            spellCheck={false}
+          />
+          <span className="hint">
+            Point this at any running ASGuard instance — local (<code className="inline">uvicorn asguard.api.main:app</code>),
+            Docker, or a remote deployment. The app stays fully usable without one via the built-in demo data.
+          </span>
+        </div>
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={demo}
+            onChange={(e) => {
+              desktopConfig.setForceDemo(e.target.checked);
+              setDemo(e.target.checked);
+              void probeBackend();
+            }}
+          />
+          Always use offline demo data (ignore backend)
+        </label>
+        <div className="row-actions">
+          <button className="btn btn-primary" onClick={saveAndTest} disabled={testing}>
+            {testing ? <span className="spinning" /> : "Save & Test Connection"}
+          </button>
+          {result && <span style={{ fontSize: 12.5, color: "var(--muted)", alignSelf: "center" }}>{result}</span>}
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 export function Settings() {
   const { data, error, loading, refresh } = useApi<SettingsDoc>(() => api.settings());
@@ -59,6 +124,13 @@ export function Settings() {
       </p>
 
       {message && <div style={{ marginBottom: 12 }}><Alert kind={message.kind}>{message.text}</Alert></div>}
+
+      {isDesktop && (
+        <>
+          <ConnectionCard />
+          <div className="section-gap" />
+        </>
+      )}
 
       <div className="grid half">
         <Card title="Security Thresholds">

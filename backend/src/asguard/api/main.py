@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -115,6 +116,20 @@ def create_app(settings: Settings | None = None, provider_factory=None) -> FastA
         lifespan=lifespan,
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
+    )
+
+    # Desktop app (Tauri webview) and the local vite dev server call the API
+    # from other origins; the dashboard itself stays same-origin.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "tauri://localhost",
+            "http://tauri.localhost",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     app.include_router(routes_health.router)

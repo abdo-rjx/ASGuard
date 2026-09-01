@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { usePolling } from "../hooks/useApi";
 import { Card, DecisionBadge, DirBadge, Empty, RiskValue, StatCard, clockTime } from "../components/ui";
@@ -9,6 +9,7 @@ import { GuardDiagram } from "../components/PipelineFlow";
 const POLL_MS = 5000;
 
 export function Dashboard() {
+  const navigate = useNavigate();
   const { data: metrics } = usePolling(() => api.metrics(24), POLL_MS);
   const { data: series } = usePolling(() => api.timeseries(24), POLL_MS);
 
@@ -75,7 +76,7 @@ export function Dashboard() {
               <tbody>
                 {metrics.recent_events.map((e, i) => (
                   <tr key={e.id} className="clickable" style={{ ["--i" as string]: i }}
-                      onClick={() => (window.location.href = `/inspector/${e.id}`)}>
+                      onClick={() => navigate(`/inspector/${e.id}`)}>
                     <td className="mono">{clockTime(e.created_at)}</td>
                     <td><DirBadge direction={e.direction} /></td>
                     <td>{e.threat_types.length ? e.threat_types.join(", ") : "—"}</td>
