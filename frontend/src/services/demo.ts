@@ -57,7 +57,7 @@ const rng = mulberry32(0x0561);
 const APPS: Application[] = [
   {
     id: "app_" + hex(rng, 8), name: "support-copilot",
-    upstream_url: "https://api.openai.com/v1", has_upstream_api_key: true,
+    upstream_url: "https://api.openai.com/v1", client_api_key: "asg_demo_" + hex(rng, 16), has_upstream_api_key: true,
     auth_type: "bearer", policy_profile: "standard", timeout_ms: 60000,
     rate_limit_rpm: 120, logging_mode: "metadata", is_active: true, status: "ONLINE",
     created_at: new Date(Date.now() - 42 * 864e5).toISOString(),
@@ -66,7 +66,7 @@ const APPS: Application[] = [
   },
   {
     id: "app_" + hex(rng, 8), name: "code-assistant",
-    upstream_url: "http://localhost:11434/v1", has_upstream_api_key: false,
+    upstream_url: "http://localhost:11434/v1", client_api_key: "asg_demo_" + hex(rng, 16), has_upstream_api_key: false,
     auth_type: "none", policy_profile: "strict", timeout_ms: 90000,
     rate_limit_rpm: 60, logging_mode: "content_preview", is_active: true, status: "ONLINE",
     created_at: new Date(Date.now() - 21 * 864e5).toISOString(),
@@ -75,7 +75,7 @@ const APPS: Application[] = [
   },
   {
     id: "app_" + hex(rng, 8), name: "data-analyst",
-    upstream_url: "https://internal-llm.corp.local/v1", has_upstream_api_key: true,
+    upstream_url: "https://internal-llm.corp.local/v1", client_api_key: "asg_demo_" + hex(rng, 16), has_upstream_api_key: true,
     auth_type: "bearer", policy_profile: "compliance", timeout_ms: 120000,
     rate_limit_rpm: 30, logging_mode: "metadata", is_active: false, status: "OFFLINE",
     created_at: new Date(Date.now() - 9 * 864e5).toISOString(),
@@ -432,6 +432,7 @@ function createApplication(body: Record<string, unknown> | null, audit: AuditFn)
     id: "app_" + hex(rng, 8),
     name: String(body?.name ?? "unnamed"),
     upstream_url: String(body?.upstream_url ?? ""),
+    client_api_key: "asg_live_" + hex(rng, 16),
     has_upstream_api_key: Boolean(body?.upstream_api_key),
     auth_type: body?.upstream_api_key ? "bearer" : "none",
     policy_profile: "standard",

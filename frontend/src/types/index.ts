@@ -78,6 +78,7 @@ export interface Application {
   id: string;
   name: string;
   upstream_url: string;
+  client_api_key: string;
   has_upstream_api_key: boolean;
   auth_type: string;
   policy_profile: string;

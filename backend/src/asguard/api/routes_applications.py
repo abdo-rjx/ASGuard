@@ -68,6 +68,7 @@ def _app_dict(app, requests: int = 0, avg_risk: float = 0.0) -> dict:
         "id": app.id,
         "name": app.name,
         "upstream_url": app.upstream_url,
+        "client_api_key": app.client_api_key,
         "has_upstream_api_key": bool(app.upstream_api_key),
         "auth_type": app.auth_type,
         "policy_profile": app.policy_profile,

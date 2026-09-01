@@ -142,22 +142,44 @@ database stores only ASGuard metadata (policies, events, application config, set
 
 The dashboard also ships as a **native desktop application** — same React UI,
 wrapped with **Tauri 2** so it uses your OS webview instead of bundling
-Chromium: **~40–80 MB RAM** and a **single-digit-MB installer**.
+Chromium: **~40–80 MB RAM** and a tiny, fast-starting binary.
 
-- **Fedora/Linux** → `.rpm` / `.deb` / `.AppImage` · **Windows** → `.msi` · **macOS** → `.dmg`
-- Point it at any running ASGuard instance (`Settings → Desktop Connection`) —
-  the sidebar pill switches between **LIVE** (real backend) and **DEMO**
-  (built-in offline simulator), so the app is fully usable with or without a backend.
+### Get the installer
+
+| OS | Installer | How to get it |
+|---|---|---|
+| **Fedora / Linux** | `.rpm` · `.deb` · `.AppImage` | Build on any Linux box (below) — the `.rpm` is ~1.5 MB |
+| **Windows 10/11** | `.msi` · `.exe` | **GitHub Actions** → *desktop-builds* workflow → artifacts (or build on a Windows machine) |
+| **macOS 11+** | `.dmg` (Apple Silicon + Intel) | Same — Actions artifacts, or build on a Mac |
+
+> macOS and Windows installers must be produced on their own OS (Apple / Microsoft
+> toolchain licensing). The [GitHub Actions](.github/workflows/desktop.yml)
+> workflow builds all four targets automatically on every push to `main` — open
+> the repo's **Actions** tab, pick the latest `desktop-builds` run, and download
+> the artifact matching your platform.
+
+### Build it yourself
 
 ```bash
 cd frontend
 npm install
 npm run desktop:build   # installers land in frontend/src-tauri/target/release/bundle/
+npm run desktop:dev     # hot-reloading development window
 ```
 
-Cross-platform installers are built automatically by
-[GitHub Actions](.github/workflows/desktop.yml) on every push. See
-[docs/desktop.md](docs/desktop.md) for details.
+Fedora install (one command):
+
+```bash
+sudo dnf install frontend/src-tauri/target/release/bundle/rpm/ASGuard-*.x86_64.rpm
+```
+
+### Connect it to your backend
+
+Point it at any running ASGuard instance (`Settings → Desktop Connection`) —
+the sidebar pill switches between **LIVE** (real backend) and **DEMO**
+(built-in offline simulator), so the app is fully usable with or without a backend.
+
+Full details in [docs/desktop.md](docs/desktop.md).
 
 ---
 
@@ -231,11 +253,24 @@ Point your client at ASGuard instead of your AI provider. **Only the base URL ch
 
 ```python
 from openai import OpenAI
-client = OpenAI(base_url="http://localhost:8000/v1", api_key="<app client key or any value>")
+
+client = OpenAI(
+    base_url="http://localhost:8000/v1",   # ASGuard gateway (was your AI provider)
+    api_key="asg_live_<your client key>",  # the key shown in Applications → Configure
+)
 ```
 
-Then register the upstream in the dashboard (**Applications → New Application**) with your
-real provider's OpenAI-compatible URL, e.g. `https://api.example.com/v1`.
+Two different keys are involved — don't mix them up:
+
+| Key | Who uses it | Where it lives |
+|---|---|---|
+| **Client key** | Your app sends this to ASGuard (`Authorization: Bearer …`) | Generated per application in the console |
+| **Upstream key** | ASGuard sends this to your real AI provider | Entered once in the application config; **write-only**, never returned by any API |
+
+Register the upstream in the dashboard (**Applications → New Application**) with your
+real provider's OpenAI-compatible URL, e.g. `https://api.example.com/v1`, plus that
+provider's API key. ASGuard then inspects every request/response before forwarding
+to your configured upstream (OpenAI, Azure, Ollama, vLLM, Mistral, …).
 
 ---
 

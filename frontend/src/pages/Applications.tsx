@@ -111,6 +111,34 @@ function AppForm({ app, onClose, onSaved }: { app: Application | null; onClose: 
         <h2 style={{ marginTop: 0 }}>{app ? `Configure: ${app.name}` : "New Application"}</h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {error && <Alert kind="error">{error}</Alert>}
+          {app && (
+            <div className="field">
+              <label>Client key — use it as the API key in your app</label>
+              <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
+                <input
+                  readOnly
+                  value={app.client_api_key}
+                  onFocus={(e) => e.target.select()}
+                  spellCheck={false}
+                  style={{ fontFamily: "var(--font-mono)", fontSize: 12.5 }}
+                />
+                <button
+                  className="btn btn-sm"
+                  type="button"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(app.client_api_key);
+                    alert(`Client key copied: ${app.client_api_key}`);
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+              <span className="hint">
+                Set this as the <code className="inline">api_key</code> and ASGuard as the{" "}
+                <code className="inline">base_url</code> in your OpenAI client — your app keeps its existing code.
+              </span>
+            </div>
+          )}
           <Field label="Application name">
             <input value={name} onChange={(e) => setName(e.target.value)} />
           </Field>
