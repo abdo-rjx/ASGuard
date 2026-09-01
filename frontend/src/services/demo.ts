@@ -388,7 +388,8 @@ export async function demoHandle<T>(path: string, init?: RequestInit): Promise<T
     const run = runTests();
     TEST_RUNS.unshift(run);
     audit("testing.run", "test_run", run.id, { total: run.total, failed: run.failed });
-    result = run;
+    // Mirror the real backend contract (see routes_testing.py): run_id, not id.
+    result = { run_id: run.id, total: run.total, passed: run.passed, failed: run.failed, results: run.results };
   } else if (p === "/api/testing/results") {
     result = { runs: TEST_RUNS };
   } else if (p === "/api/settings" && method === "GET") {
