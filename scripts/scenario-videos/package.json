@@ -1,0 +1,12 @@
+{
+  "name": "asguard-scenario-videos",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "capture": "python3 capture_verdicts.py",
+    "generate": "node generate.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}

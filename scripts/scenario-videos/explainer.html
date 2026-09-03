@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>ASGuard — Scenario Explainer</title>
+<style>
+  :root {
+    --bg: #12100d; --bg-deep: #0b0a08; --panel: #1a1815; --panel-2: #211e1a;
+    --panel-3: #2a2723; --border: #2e2a25; --border-strong: #3d3831;
+    --text: #f0ede6; --muted: #a39c8f; --faint: #6f6a5f;
+    --gold: #e9b44c; --gold-pale: #f3d489; --gold-deep: #8a6a2f;
+    --gold-bg: rgba(233,180,76,.10); --gold-border: rgba(233,180,76,.35);
+    --patina: #4fb3a9; --patina-pale: #8fd0c8; --patina-bg: rgba(79,179,169,.10);
+    --patina-border: rgba(79,179,169,.35);
+    --block: #e5484d; --block-bg: rgba(229,72,77,.10); --block-border: rgba(229,72,77,.35);
+    --font-sans: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    --ease-out: cubic-bezier(.22,1,.36,1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(233,180,76,.05), transparent 60%),
+      radial-gradient(700px 400px at -10% 110%, rgba(79,179,169,.05), transparent 60%),
+      var(--bg);
+    color: var(--text); font-family: var(--font-sans); font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app { display: flex; flex-direction: column; width: 1280px; height: 720px; }
+  header {
+    height: 62px; flex: none; display: flex; align-items: center; gap: 16px;
+    padding: 0 28px; border-bottom: 1px solid var(--border); background: var(--bg-deep);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; }
+  .brand .accent { color: var(--gold); }
+  .crumb { color: var(--muted); font-size: 13px; }
+  .crumb b { color: var(--text); font-weight: 600; }
+  .dirchip {
+    margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: .14em;
+    padding: 5px 12px; border-radius: 999px; border: 1px solid var(--gold-border);
+    color: var(--gold); background: var(--gold-bg);
+  }
+  .dirchip.output { color: var(--patina); border-color: var(--patina-border); background: var(--patina-bg); }
+  main { flex: 1; position: relative; overflow: hidden; }
+  .slide {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 40px 72px; gap: 22px;
+    animation: fadeUp .5s var(--ease-out) both;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes popIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+  .kicker { color: var(--gold); font-weight: 700; font-size: 12px; letter-spacing: .22em; text-transform: uppercase; }
+  .slide h1 { font-size: 52px; font-weight: 800; text-align: center; }
+  .tagline { color: var(--muted); font-size: 19px; text-align: center; max-width: 820px; line-height: 1.5; }
+  .how-list { display: flex; flex-direction: column; gap: 16px; max-width: 900px; }
+  .how-item {
+    display: flex; gap: 14px; align-items: flex-start; padding: 16px 20px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    font-size: 16px; line-height: 1.55;
+    animation: fadeUp .45s var(--ease-out) both;
+  }
+  .how-item .n {
+    flex: none; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 12px; font-weight: 800; color: var(--gold);
+    border: 1px solid var(--gold-border); background: var(--gold-bg); margin-top: 1px;
+  }
+  .case-count { color: var(--faint); font-size: 14px; letter-spacing: .06em; }
+  .case-count b { color: var(--patina); }
+
+  /* ---------- case layout ---------- */
+  .case-wrap { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 18px 40px 12px; gap: 12px; animation: fadeUp .4s var(--ease-out) both; }
+  .case-head { display: flex; align-items: baseline; gap: 14px; flex: none; }
+  .case-head .cid { font-family: var(--font-mono); color: var(--gold); font-weight: 700; font-size: 15px; }
+  .case-head .cdesc { color: var(--muted); font-size: 14px; }
+  .cols { display: grid; grid-template-columns: 1fr 400px; gap: 18px; flex: 1; min-height: 0; }
+  .left-col { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+
+  .io-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; flex: none; }
+  .io-label { font-size: 10.5px; font-weight: 700; letter-spacing: .18em; color: var(--faint); text-transform: uppercase; margin-bottom: 7px; display: flex; gap: 8px; align-items: center; }
+  .io-label .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+  .io-label.ai .dot { background: var(--patina); }
+  .io-text { font-family: var(--font-mono); font-size: 15px; line-height: 1.6; min-height: 48px; white-space: pre-wrap; word-break: break-word; }
+  .caret { display: inline-block; width: 8px; height: 17px; background: var(--gold); vertical-align: -3px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .pipeline { flex: none; }
+  .pipe-title { font-size: 10.5px; font-weight: 700; letter-spacing: .18em; color: var(--faint); text-transform: uppercase; margin-bottom: 7px; }
+  .stages { display: flex; align-items: stretch; }
+  .stage {
+    flex: 1; position: relative; background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 9px; margin-right: 24px; opacity: .45; transition: all .3s var(--ease-out);
+  }
+  .stage:last-child { margin-right: 0; }
+  .stage:not(:last-child)::after { content: ""; position: absolute; right: -19px; top: 50%; width: 14px; height: 1px; background: var(--border-strong); }
+  .stage .sn { font-size: 11px; font-weight: 700; }
+  .stage .sd { font-size: 9.5px; color: var(--faint); margin-top: 2px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .stage.active { opacity: 1; border-color: var(--gold-border); background: var(--gold-bg); box-shadow: 0 0 0 1px var(--gold-border); }
+  .stage.active .sn { color: var(--gold-pale); }
+  .stage.done { opacity: 1; }
+  .stage.done .sn { color: var(--patina); }
+  .stage.done::before { content: "✓ "; color: var(--patina); font-weight: 800; }
+
+  .evidence-row { display: flex; gap: 14px; align-items: center; flex: 1; min-height: 0; }
+  .risk-gauge {
+    flex: none; width: 140px; align-self: stretch; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  }
+  .risk-num { font-size: 44px; font-weight: 800; font-family: var(--font-mono); color: var(--faint); transition: color .3s; line-height: 1; }
+  .risk-num.warm { color: var(--gold); }
+  .risk-num.hot { color: var(--block); }
+  .risk-cap { font-size: 9.5px; letter-spacing: .18em; color: var(--faint); text-transform: uppercase; }
+  .detectors { flex: 1; display: flex; flex-direction: column; gap: 8px; justify-content: center; min-width: 0; }
+  .det-chip {
+    display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--block-border);
+    border-radius: 8px; padding: 8px 13px; animation: popIn .35s var(--ease-out) both; min-width: 0;
+  }
+  .det-chip .dname { font-weight: 700; font-size: 13px; flex: none; }
+  .det-chip .dsig { color: var(--muted); font-size: 11.5px; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+  .det-chip .dconf { font-family: var(--font-mono); font-size: 12px; color: var(--block); font-weight: 700; }
+  .det-none { color: var(--faint); font-size: 13px; font-style: italic; }
+
+  .verdict {
+    flex: none; background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; animation: popIn .4s var(--ease-out) both;
+    overflow: hidden; max-height: 100%;
+  }
+  .verdict-pill { align-self: flex-start; font-size: 15px; font-weight: 800; letter-spacing: .1em; padding: 7px 16px; border-radius: 999px; display: flex; gap: 10px; align-items: center; }
+  .verdict-pill .code { font-family: var(--font-mono); font-weight: 600; opacity: .75; letter-spacing: 0; }
+  .v-block { color: var(--block); background: var(--block-bg); border: 1px solid var(--block-border); }
+  .v-sanitize { color: var(--gold); background: var(--gold-bg); border: 1px solid var(--gold-border); }
+  .v-allow { color: var(--patina); background: var(--patina-bg); border: 1px solid var(--patina-border); }
+  .v-reason { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+  .v-reason b { color: var(--text); }
+  .v-out { border-top: 1px solid var(--border); padding-top: 9px; }
+  .v-out .io-label { margin-bottom: 5px; }
+  .v-out .io-text { font-size: 13.5px; min-height: 18px; }
+  .ph { color: var(--gold); background: var(--gold-bg); border: 1px solid var(--gold-border); border-radius: 4px; padding: 0 4px; }
+
+  footer { flex: none; height: 64px; display: flex; align-items: center; justify-content: center; padding: 0 60px; border-top: 1px solid var(--border); background: var(--bg-deep); }
+  #caption { color: var(--muted); font-size: 16px; line-height: 1.45; text-align: center; transition: opacity .25s; max-width: 1100px; }
+  #caption b { color: var(--gold-pale); }
+  #caption .r { color: var(--block); font-weight: 700; }
+  #caption .g { color: var(--patina); font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L20 5.5V11C20 16.5 16.6 20.6 12 22C7.4 20.6 4 16.5 4 11V5.5L12 2Z"
+              stroke="#e9b44c" stroke-width="1.8" fill="rgba(233,180,76,.12)"/>
+        <path d="M8.5 11.8L11 14.3L15.7 9.2" stroke="#e9b44c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span><span class="accent">AS</span>Guard</span>
+    </div>
+    <div class="crumb" id="crumb"></div>
+    <div class="dirchip" id="dirchip">INPUT GUARD</div>
+  </header>
+  <main id="stage"></main>
+  <footer><div id="caption"></div></footer>
+</div>
+<script>
+  const $ = (sel) => document.querySelector(sel);
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  let DATA = null;
+
+  function setCaption(html) {
+    const c = $("#caption");
+    c.style.opacity = "0";
+    setTimeout(() => { c.innerHTML = html; c.style.opacity = "1"; }, 220);
+  }
+
+  const esc2 = (s) => esc(s).replace(/&#39;/g, "&#39;");
+  const inputWord = () => DATA.direction === "input" ? "prompt" : "response";
+
+  window.__driver = {
+    setData(data) { DATA = data; },
+
+    async showIntro() {
+      $("#crumb").innerHTML = "Scenario videos / <b>" + esc(DATA.title) + "</b>";
+      const chip = $("#dirchip");
+      chip.textContent = DATA.direction === "input" ? "INPUT GUARD" : "OUTPUT GUARD";
+      chip.classList.toggle("output", DATA.direction === "output");
+      $("#stage").innerHTML = `
+        <div class="slide">
+          <div class="kicker">ASGuard scenario ${DATA.index + 1} of ${DATA.totalCategories}</div>
+          <h1>${esc(DATA.title)}</h1>
+          <div class="tagline">${esc(DATA.tagline)}</div>
+          <div class="case-count"><b>${DATA.total}</b> case${DATA.total === 1 ? "" : "s"} in the security corpus · executed against the live detection engine</div>
+        </div>`;
+      setCaption(`This video explains how <b>ASGuard</b> handles <b>${esc(DATA.title.toLowerCase())}</b> — ${DATA.direction === "input" ? "threats arriving in prompts" : "sensitive content leaking out in AI responses"}.`);
+      await sleep(2600);
+    },
+
+    async showHow() {
+      const items = DATA.how.map((h, i) =>
+        `<div class="how-item" style="animation-delay:${i * 0.7}s"><span class="n">${i + 1}</span><span>${esc(h)}</span></div>`
+      ).join("");
+      $("#stage").innerHTML = `
+        <div class="slide">
+          <div class="kicker">How ASGuard detects this</div>
+          <div class="how-list">${items}</div>
+        </div>`;
+      setCaption(`First, the big picture — then we replay <b>every case</b> from the corpus at human speed.`);
+      await sleep(1500 + DATA.how.length * 700);
+    },
+
+    async showCase(i) {
+      const c = DATA.cases[i];
+      const stagesHtml = c.stages.map((s) =>
+        `<div class="stage" data-stage="${esc(s.name)}"><div class="sn">${esc(s.name)}</div><div class="sd"></div></div>`
+      ).join("");
+      const srcLabel = DATA.direction === "input" ? "Client prompt" : "AI response";
+      $("#stage").innerHTML = `
+        <div class="case-wrap">
+          <div class="case-head"><span class="cid">${esc(c.id)}</span><span class="cdesc">${esc(c.description || DATA.key.replaceAll("-", " "))}</span></div>
+          <div class="cols">
+            <div class="left-col">
+              <div class="io-card">
+                <div class="io-label"><span class="dot"></span>${srcLabel}</div>
+                <div class="io-text" id="ioText"></div>
+              </div>
+              <div class="pipeline">
+                <div class="pipe-title">ASGuard security pipeline</div>
+                <div class="stages">${stagesHtml}</div>
+              </div>
+              <div class="evidence-row">
+                <div class="risk-gauge"><div class="risk-num" id="riskNum">—</div><div class="risk-cap">risk / 100</div></div>
+                <div class="detectors" id="detectors"><div class="det-none">running detectors…</div></div>
+              </div>
+            </div>
+            <div class="verdict" id="verdict" style="display:none"></div>
+          </div>
+        </div>`;
+      $("#verdict").style.display = "";
+      $("#verdict").innerHTML = `<div style="color:var(--faint);font-size:13px">pipeline verdict appears here…</div>`;
+      setCaption(`Case <b>${esc(c.id)}</b> — ${esc(c.description || "corpus case " + (i + 1) + " of " + DATA.total)}.`);
+      await sleep(900);
+    },
+
+    async typeInput(i) {
+      const c = DATA.cases[i];
+      const el = $("#ioText");
+      setCaption(DATA.direction === "input"
+        ? `A client sends this prompt to the AI — watch what ASGuard does with it.`
+        : `The AI is about to answer with this content — the output guard inspects it before delivery.`);
+      el.innerHTML = `<span class="caret"></span>`;
+      for (const ch of c.input) {
+        el.innerHTML = esc(el.textContent) + esc(ch) + `<span class="caret"></span>`;
+        await sleep(52);
+      }
+      el.innerHTML = esc(c.input);
+      await sleep(500);
+    },
+    async runPipeline(i) {
+      const c = DATA.cases[i];
+      const stageEls = document.querySelectorAll(".stage");
+      for (let s = 0; s < c.stages.length; s++) {
+        const st = c.stages[s];
+        const el = stageEls[s];
+        el.classList.add("active");
+        el.querySelector(".sd").textContent = st.detail || "";
+        if (s > 0) stageEls[s - 1].classList.replace("active", "done");
+        if (/normal/i.test(st.name)) setCaption(`Step 1 — <b>Normalization</b>: unicode, homoglyphs and leetspeak are folded so obfuscation can't hide (${st.detail || "clean"}).`);
+        else if (/parsing/i.test(st.name)) setCaption(`Step 1 — <b>Response parsing</b>: the text payload is extracted for inspection (${st.detail}).`);
+        else if (/detection/i.test(st.name)) {
+          setCaption(`Step 2 — <b>Detection</b>: ${st.detail}.`);
+          await sleep(900);
+          const detBox = $("#detectors");
+          if (c.detections.length === 0) {
+            detBox.innerHTML = `<div class="det-none">no detector fired — nothing suspicious found</div>`;
+          } else {
+            detBox.innerHTML = c.detections.map((d, k) => {
+              const sig = d.signals[0] || d.spans.map((s2) => s2.masked_preview).join(", ") || "";
+              return `<div class="det-chip" style="animation-delay:${k * 0.35}s">
+                <span class="dname">${esc(d.detector)}</span>
+                <span class="dsig">${esc(sig)}</span>
+                <span class="dconf">${Math.round(d.confidence * 100)}%</span></div>`;
+            }).join("");
+          }
+          await sleep(700 + c.detections.length * 350);
+          continue;
+        }
+        else if (/intent/i.test(st.name)) setCaption(`Step 3 — <b>Intent analysis</b>: ${st.detail}.`);
+        else if (/risk/i.test(st.name)) {
+          setCaption(`Step 3 — <b>Risk scoring</b>: the noisy-OR engine aggregates the evidence.`);
+          await sleep(700);
+          await this._countRisk(c.risk);
+          setCaption(`Aggregate risk: <b>${c.risk}/100</b> (${esc(c.risk_level)}).`);
+          await sleep(600);
+          continue;
+        }
+        else if (/policy/i.test(st.name)) {
+          setCaption(`Step 4 — <b>Policy</b>: the deterministic policy engine makes the final call — ${st.detail}.`);
+          if (st.decision) el.querySelector(".sd").textContent = st.decision;
+        }
+        else if (/sanitiz/i.test(st.name)) setCaption(`Step 5 — <b>Sanitization</b>: sensitive spans are replaced with typed placeholders.`);
+        else if (/verif/i.test(st.name)) setCaption(`Step 6 — <b>Verification</b>: a re-scan confirms zero residue (${st.detail || "clean"}).`);
+        else setCaption(`${esc(st.name)} — ${esc(st.detail || "")}`);
+        await sleep(850);
+      }
+      if (stageEls.length) stageEls[stageEls.length - 1].classList.replace("active", "done");
+    },
+
+    async _countRisk(target) {
+      const el = $("#riskNum");
+      const steps = 22;
+      for (let k = 0; k <= steps; k++) {
+        const v = Math.round((target * k) / steps);
+        el.textContent = v;
+        el.classList.toggle("warm", v >= 30 && v < 70);
+        el.classList.toggle("hot", v >= 70);
+        await sleep(38);
+      }
+    },
+    async showVerdict(i) {
+      const c = DATA.cases[i];
+      const d = c.decision;
+      const cls = d === "BLOCK" ? "v-block" : d === "SANITIZE" ? "v-sanitize" : "v-allow";
+      const code = d === "BLOCK" ? "403" : "200";
+      const pill = `<div class="verdict-pill ${cls}">${d}<span class="code">HTTP ${code}</span></div>`;
+      const reasons = {
+        BLOCK: DATA.direction === "input"
+          ? `The <span class="r">prompt is blocked</span> — it never reaches the AI. The event is written to the audit log with the full evidence trail.`
+          : `The <span class="r">response is blocked</span> — the client receives a 403 instead of the leak.`,
+        SANITIZE: `Sensitive spans are <b>replaced with typed placeholders</b> — the answer stays useful, the data never leaves.`,
+        ALLOW: `Clean content — <span class="g">forwarded unchanged</span> (${DATA.direction === "input" ? "to the AI" : "to the client"}).`,
+      };
+      let outBlock = "";
+      if (d === "SANITIZE" && c.sanitized_text) {
+        outBlock = `<div class="v-out">
+          <div class="io-label ai"><span class="dot"></span>Delivered to the client</div>
+          <div class="io-text" id="sanText"></div></div>`;
+      }
+      const v = $("#verdict");
+      v.innerHTML = pill + `<div class="v-reason">${reasons[d]} <b>·</b> policy reason: <b>${esc(c.reason)}</b></div>` + outBlock;
+      setCaption(d === "BLOCK"
+        ? `Verdict: <span class="r">BLOCK</span> — risk <b>${c.risk}/100</b> crossed the policy threshold for <b>${esc(c.category.replaceAll("_", " "))}</b>.`        : d === "SANITIZE"
+          ? `Verdict: <span class="g">SANITIZE</span> — the leak is defused, not just dropped.`
+          : `Verdict: <span class="g">ALLOW</span> — a legitimate ${inputWord()} passes untouched. No false positive.`);
+      if (outBlock) {
+        const el = $("#sanText");
+        for (const ch of c.sanitized_text) { el.textContent += ch; await sleep(26); }
+      }
+      await sleep(2100);
+    },
+
+    async showOutro() {
+      const blocked = DATA.cases.filter((c) => c.decision === "BLOCK").length;
+      const san = DATA.cases.filter((c) => c.decision === "SANITIZE").length;
+      const allow = DATA.cases.filter((c) => c.decision === "ALLOW").length;
+      $("#stage").innerHTML = `
+        <div class="slide">
+          <div class="kicker">Scenario summary — ${esc(DATA.title)}</div>
+          <h2 style="font-size:34px">${DATA.total} case${DATA.total === 1 ? "" : "s"} · <span style="color:var(--patina)">${DATA.passed}/${DATA.total} passed</span></h2>
+          <div class="tagline">${blocked} blocked · ${san} sanitized · ${allow} allowed — every result produced by the real ASGuard engine.</div>
+        </div>`;
+      setCaption(`<b>${esc(DATA.title)}</b>: handled deterministically — detectors give evidence, the policy engine decides.`);
+      await sleep(2800);
+    },
+  };
+</script>
+
+</body>
+</html>

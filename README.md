@@ -312,6 +312,33 @@ final call. See `docs/architecture.md` and `docs/threat-model.md`.
 
 ---
 
+## 🎥 Scenario videos
+
+Every category in the [security corpus](#-testing) has a narrated walkthrough video.
+Videos are recorded with **Playwright at human speed** and show the *real* ASGuard engine —
+verdicts, risk scores, detector evidence and stage traces are produced live by
+`InputGuard` / `OutputGuard`. Nothing is mocked.
+
+| # | Scenario | Direction | Cases | Video |
+|---|---|---|---|---|
+| 01 | Prompt Injection | input | 4 | <video src="videos/scenarios/01-prompt-injection.webm" width="300" controls muted></video> |
+| 02 | Jailbreak | input | 3 | <video src="videos/scenarios/02-jailbreak.webm" width="300" controls muted></video> |
+| 03 | System Prompt Extraction | input | 2 | <video src="videos/scenarios/03-system-prompt-extraction.webm" width="300" controls muted></video> |
+| 04 | Obfuscation Attacks | input | 2 | <video src="videos/scenarios/04-obfuscation.webm" width="300" controls muted></video> |
+| 05 | Suspicious Intent | input | 2 | <video src="videos/scenarios/05-suspicious-intent.webm" width="300" controls muted></video> |
+| 06 | Benign Input (false-positive guard) | input | 4 | <video src="videos/scenarios/06-benign-input.webm" width="300" controls muted></video> |
+| 07 | Secret Leakage | output | 4 | <video src="videos/scenarios/07-secret-leakage.webm" width="300" controls muted></video> |
+| 08 | PII Leakage | output | 2 | <video src="videos/scenarios/08-pii-leakage.webm" width="300" controls muted></video> |
+| 09 | Financial Data Leakage | output | 2 | <video src="videos/scenarios/09-financial-leakage.webm" width="300" controls muted></video> |
+| 10 | Confidential Content | output | 1 | <video src="videos/scenarios/10-confidential-content.webm" width="300" controls muted></video> |
+| 11 | Benign Output (false-positive guard) | output | 3 | <video src="videos/scenarios/11-benign-output.webm" width="300" controls muted></video> |
+
+> Not playing? Download the file directly from `videos/scenarios/` (e.g.
+> `videos/scenarios/01-prompt-injection.webm`) — all videos are 1280×720 WebM.
+> Regenerate any of them with [`scripts/scenario-videos/`](scripts/scenario-videos/README.md).
+
+---
+
 ## ✅ Testing
 
 ```bash
@@ -341,6 +368,8 @@ asguard/
 │   └── alembic/              #   database migrations
 ├── frontend/                 # React + TypeScript dashboard (Vite)
 │   └── src/pages/            #   dashboard · policies · events · testing · settings …
+├── videos/scenarios/         # Playwright-recorded scenario walkthrough videos (WebM)
+├── scripts/scenario-videos/  # generator: capture verdicts → record 11 explainer videos
 ├── docs/                     # architecture · threat model · input/output security · APIs …
 ├── docker-compose.yml        # app + PostgreSQL
 └── Dockerfile
