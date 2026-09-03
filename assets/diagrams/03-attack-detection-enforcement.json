@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "ASGuard — Attack → Detection → Enforcement",
+    "subtitle": "ASGuard protects both sides of the AI interaction",
+    "output": "assets/diagrams/03-attack-detection-enforcement.html",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 780],
+    "views": [
+      { "id": "inbound", "label": "Inbound threats", "focus": ["app", "inj", "jail", "input-guard", "in-block", "model"], "note": "Prompt attacks are stopped before the model sees them." },
+      { "id": "outbound", "label": "Outbound leaks", "focus": ["model", "secret", "output-guard", "user"], "note": "Response leaks are stopped before the user sees them." }
+    ]
+  },
+  "stages": [
+    { "label": "Client → App" },
+    { "label": "Input Threats" },
+    { "label": "ASGuard Input Guard" },
+    { "label": "AI Model" },
+    { "label": "Output Guard · User" }
+  ],
+  "nodes": [
+    { "id": "app", "type": "backend", "label": "Company App", "sublabel": "sends prompt", "stage": 0, "row": 1 },
+    { "id": "inj", "type": "security", "label": "Prompt Injection", "sublabel": "\"ignore instructions\"", "stage": 1, "row": 0, "tag": "BLOCK" },
+    { "id": "jail", "type": "security", "label": "Jailbreak", "sublabel": "persona hijack", "stage": 1, "row": 2, "tag": "BLOCK" },
+    { "id": "input-guard", "type": "security", "label": "Input Guard", "sublabel": "normalize → detect → policy", "stage": 2, "row": 1, "width": 124, "tag": "INSPECT PROMPT" },
+    { "id": "in-block", "type": "external", "label": "403 Blocked", "sublabel": "threat stopped", "stage": 2, "row": 3, "tag": "fail closed" },
+    { "id": "model", "type": "cloud", "label": "AI Model", "sublabel": "OpenAI · Azure · Ollama", "stage": 3, "row": 1, "width": 124 },
+    { "id": "secret", "type": "security", "label": "Secrets", "sublabel": "AKIA· · sk-· · PEM", "stage": 4, "row": 0, "tag": "BLOCK" },
+    { "id": "output-guard", "type": "security", "label": "Output Guard", "sublabel": "detect → sanitize → verify", "stage": 4, "row": 1, "width": 124, "tag": "INSPECT RESPONSE" },
+    { "id": "user", "type": "frontend", "label": "User", "sublabel": "receives clean response", "stage": 4, "row": 3, "tag": "protected" }
+  ],
+  "flows": [
+    { "from": "app", "to": "input-guard", "label": "prompt", "variant": "emphasis", "route": "straight" },
+    { "from": "inj", "to": "input-guard", "label": "detect → 403", "variant": "security", "labelDy": 26 },
+    { "from": "jail", "to": "input-guard", "label": "detect → 403", "variant": "security", "labelDy": -26 },
+    { "from": "input-guard", "to": "in-block", "label": "threat → 403", "variant": "security", "route": "straight", "labelDy": 28 },
+    { "from": "input-guard", "to": "model", "label": "ALLOW", "variant": "emphasis", "route": "straight" },
+    { "from": "model", "to": "output-guard", "label": "response", "variant": "emphasis", "route": "straight" },
+    { "from": "secret", "to": "output-guard", "label": "detect → 403", "variant": "security", "labelDy": 22 },
+    { "from": "output-guard", "to": "user", "label": "deliver / sanitized", "variant": "emphasis", "route": "straight", "labelDy": 34 }
+  ],
+  "cards": [
+    { "dot": "rose", "title": "Inbound — before the model sees it", "items": ["Prompt injection, jailbreak, system-prompt extraction, obfuscation", "BLOCK → 403, nothing reaches the AI", "Suspicious intent flagged REVIEW for human review"] },
+    { "dot": "emerald", "title": "Outbound — before the user sees it", "items": ["Secrets, PII, financial data, confidential content in the response", "SANITIZE → typed replacement + re-scan (verify)", "Residue survives verification → BLOCK"] },
+    { "dot": "cyan", "title": "The message", "items": ["ASGuard protects both sides of the AI interaction", "Deterministic, explainable, zero-LLM security", "~2-15 ms added latency per direction"] }
+  ]
+}

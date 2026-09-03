@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ASGuard — System Architecture",
+    "subtitle": "Where ASGuard sits in the enterprise AI architecture",
+    "output": "assets/diagrams/01-system-architecture.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "request-path", "label": "Request path", "focus": ["user", "company-app", "proxy", "gateway", "policy", "provider-router", "cloud-ai", "company-ai"], "note": "Follow one request from user through ASGuard to the AI." },
+      { "id": "management", "label": "Management plane", "focus": ["console", "admin-api", "gateway"], "note": "The desktop console controls policies and config." }
+    ]
+  },
+  "components": [
+    { "id": "user", "type": "external", "label": "User", "sublabel": "Browser / Mobile / CLI", "pos": [40, 300], "size": [120, 60] },
+    { "id": "company-app", "type": "backend", "label": "Company App", "sublabel": "Spring / FastAPI / Node", "pos": [250, 300], "size": [130, 60], "tag": "any language" },
+    { "id": "proxy", "type": "messagebus", "label": "OpenAI-compatible API", "sublabel": "POST /v1/chat/completions", "pos": [470, 300], "size": [150, 60] },
+    { "id": "gateway", "type": "security", "label": "ASGuard Gateway", "sublabel": "inspect both directions", "pos": [690, 300], "size": [160, 64], "tag": "the firewall" },
+    { "id": "policy", "type": "security", "label": "Policy Engine", "sublabel": "final authority", "pos": [705, 140], "size": [130, 56], "tag": "deterministic" },
+    { "id": "provider-router", "type": "messagebus", "label": "Provider Router", "sublabel": "OpenAI-compatible", "pos": [940, 300], "size": [130, 60] },
+    { "id": "cloud-ai", "type": "cloud", "label": "Cloud AI", "sublabel": "OpenAI · Azure", "pos": [930, 140], "size": [150, 60] },
+    { "id": "company-ai", "type": "backend", "label": "Company AI", "sublabel": "Ollama · vLLM · local", "pos": [930, 460], "size": [150, 60], "tag": "private" },
+    { "id": "audit", "type": "database", "label": "Audit Log", "sublabel": "PostgreSQL", "pos": [440, 140], "size": [130, 56] },
+    { "id": "console", "type": "frontend", "label": "ASGuard Console", "sublabel": "Desktop · Web", "pos": [40, 140], "size": [130, 60] },
+    { "id": "admin-api", "type": "backend", "label": "Admin API", "sublabel": "policies · apps · settings", "pos": [250, 140], "size": [140, 56] }
+  ],
+  "boundaries": [
+    { "kind": "security-group", "label": "ASGuard — the security boundary", "wraps": ["gateway", "policy", "provider-router", "audit"], "pad": 18 }
+  ],
+  "connections": [
+    { "id": "user-to-app", "from": "user", "to": "company-app", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "app-to-proxy", "from": "company-app", "to": "proxy", "label": "base_url change", "variant": "emphasis", "fromSide": "right", "toSide": "left" },
+    { "id": "proxy-to-gateway", "from": "proxy", "to": "gateway", "label": "client key + prompt", "variant": "emphasis", "labelDy": 50 },
+    { "id": "gateway-to-policy", "from": "gateway", "to": "policy", "label": "evidence", "variant": "security", "fromSide": "top", "toSide": "right", "via": [[770, 280], [860, 280], [860, 168], [880, 168]], "labelAt": [820, 220] },
+    { "id": "policy-back", "from": "policy", "to": "gateway", "label": "decision", "variant": "security", "via": [[770, 250], [740, 250], [740, 300]], "labelAt": [700, 265] },
+    { "id": "gateway-to-router", "from": "gateway", "to": "provider-router", "label": "ALLOW", "variant": "emphasis", "fromSide": "right", "toSide": "left" },
+    { "id": "router-to-cloud", "from": "provider-router", "to": "cloud-ai", "label": "", "variant": "dashed", "fromSide": "top", "toSide": "bottom", "route": "straight" },
+    { "id": "router-to-company", "from": "provider-router", "to": "company-ai", "label": "", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "route": "straight" },
+    { "id": "gateway-to-audit", "from": "gateway", "to": "audit", "label": "event", "variant": "dashed" },
+    { "id": "console-to-admin", "from": "console", "to": "admin-api", "label": "manage", "fromSide": "right", "toSide": "left" },
+    { "id": "admin-to-gateway", "from": "admin-api", "to": "gateway", "label": "config", "variant": "dashed", "fromSide": "right", "toSide": "top", "via": [[410, 168], [410, 120], [905, 120], [905, 290], [770, 290]], "labelAt": [455, 100] }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Data plane", "items": ["Every prompt going in and every response coming out passes through ASGuard", "OpenAI-compatible: any client works by changing only its base_url", "Safe content passes through byte-for-byte"] },
+    { "dot": "rose", "title": "Security boundary", "items": ["ASGuard holds zero credentials for your databases, RAG stores or tools", "Policy Engine is the final authority — detectors only provide evidence", "Audit trail recorded for every transaction"] },
+    { "dot": "emerald", "title": "Management plane", "items": ["Desktop console (Fedora / Windows / macOS) + web", "Policies, applications, settings, analytics", "Works LIVE against a backend or offline with demo data"] }
+  ]
+}

@@ -1,4 +1,18 @@
 # Architecture
+# Architecture
+
+## Interactive diagrams
+
+Open these self-contained HTML files in any browser (no server needed) — pan/zoom, dark/light theme (T), guided views, PNG/SVG export:
+
+| # | Diagram | What it shows |
+|---|---|---|
+| 1 | [`assets/diagrams/01-system-architecture.html`](../assets/diagrams/01-system-architecture.html) | Where ASGuard sits: User → App → ASGuard → Cloud AI / Company AI, plus the management plane |
+| 2 | [`assets/diagrams/02-security-pipeline.html`](../assets/diagrams/02-security-pipeline.html) | How ASGuard decides: normalize → detect → risk → policy → deliver/block — detectors give evidence, policy decides |
+| 3 | [`assets/diagrams/03-attack-detection-enforcement.html`](../assets/diagrams/03-attack-detection-enforcement.html) | What ASGuard protects against, both directions — inbound threats before the model, outbound leaks before the user |
+
+Sources (`*.json`, same directory) are Archify IR — edit and re-render to update a diagram.
+
 
 ## Positioning
 

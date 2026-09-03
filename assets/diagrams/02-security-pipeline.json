@@ -1,0 +1,277 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "ASGuard — Security Decision Pipeline",
+    "subtitle": "Detectors give evidence — the policy engine decides",
+    "output": "assets/diagrams/02-security-pipeline.html",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "viewBox": [
+      920,
+      810
+    ],
+    "legend": {
+      "mode": "hidden"
+    },
+    "views": [
+      {
+        "id": "main-path",
+        "label": "Happy path",
+        "focus": [
+          "request",
+          "normalize",
+          "detect",
+          "risk",
+          "policy",
+          "deliver",
+          "user"
+        ],
+        "note": "A clean request flows straight through to the AI and back."
+      },
+      {
+        "id": "blocked",
+        "label": "Blocked",
+        "focus": [
+          "request",
+          "detect",
+          "risk",
+          "policy",
+          "block",
+          "user"
+        ],
+        "note": "A threat is stopped before the AI ever sees it."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "ingress",
+      "label": "Ingress"
+    },
+    {
+      "id": "threat",
+      "label": "Threat Engine"
+    },
+    {
+      "id": "decision",
+      "label": "Decision"
+    },
+    {
+      "id": "enforcement",
+      "label": "Enforcement"
+    },
+    {
+      "id": "exception",
+      "label": "Fail-closed",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "phase-inspect",
+      "label": "Inspect",
+      "fromCol": 0,
+      "toCol": 2
+    },
+    {
+      "id": "phase-decide",
+      "label": "Decide",
+      "fromCol": 3,
+      "toCol": 4,
+      "variant": "emphasis"
+    },
+    {
+      "id": "phase-act",
+      "label": "Act",
+      "fromCol": 5,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "request",
+    "normalize",
+    "detect",
+    "risk",
+    "policy",
+    "deliver",
+    "user"
+  ],
+  "nodes": [
+    {
+      "id": "request",
+      "lane": "ingress",
+      "col": 0,
+      "type": "messagebus",
+      "label": "Request",
+      "sublabel": "POST /v1/completions",
+      "width": 96
+    },
+    {
+      "id": "normalize",
+      "lane": "ingress",
+      "col": 1,
+      "type": "backend",
+      "label": "Normalize",
+      "sublabel": "NFKC · homoglyph",
+      "width": 92
+    },
+    {
+      "id": "detect",
+      "lane": "threat",
+      "col": 2,
+      "type": "security",
+      "label": "Detect",
+      "sublabel": "5 detectors",
+      "width": 92,
+      "tag": "evidence"
+    },
+    {
+      "id": "risk",
+      "lane": "threat",
+      "col": 3,
+      "type": "backend",
+      "label": "Risk Score",
+      "sublabel": "noisy-OR · 0-100",
+      "width": 108
+    },
+    {
+      "id": "policy",
+      "lane": "decision",
+      "col": 4,
+      "type": "security",
+      "label": "Policy Engine",
+      "sublabel": "final authority",
+      "width": 120,
+      "tag": "decides"
+    },
+    {
+      "id": "deliver",
+      "lane": "enforcement",
+      "col": 5,
+      "type": "backend",
+      "label": "Deliver",
+      "sublabel": "forward / sanitize",
+      "width": 116
+    },
+    {
+      "id": "block",
+      "lane": "exception",
+      "col": 5,
+      "type": "external",
+      "label": "403 Blocked",
+      "sublabel": "nothing reaches AI",
+      "width": 116,
+      "tag": "fail closed"
+    },
+    {
+      "id": "user",
+      "lane": "ingress",
+      "col": 5,
+      "type": "frontend",
+      "label": "User",
+      "sublabel": "clean or blocked",
+      "width": 104
+    },
+    {
+      "id": "audit",
+      "lane": "exception",
+      "col": 3,
+      "type": "database",
+      "label": "Audit",
+      "sublabel": "event persisted",
+      "width": 96,
+      "tag": "async"
+    }
+  ],
+  "edges": [
+    {
+      "from": "request",
+      "to": "normalize",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "from": "normalize",
+      "to": "detect",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "from": "detect",
+      "to": "risk",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "from": "risk",
+      "to": "policy",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "from": "policy",
+      "to": "deliver",
+      "label": "ALLOW",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "from": "deliver",
+      "to": "user",
+      "label": "response",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "from": "policy",
+      "to": "block",
+      "label": "BLOCK",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "from": "block",
+      "to": "user",
+      "label": "403",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "from": "deliver",
+      "to": "audit",
+      "variant": "dashed",
+      "role": "async"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Detectors give evidence",
+      "items": [
+        "Normalization folds homoglyphs, leet and invisible chars",
+        "Five deterministic detectors run in ~1-8 ms",
+        "No ML model, no GPU, no extra inference cost"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Policy Engine decides",
+      "items": [
+        "Precedence: BLOCK > SANITIZE > REVIEW > ALLOW",
+        "Detector crashes → fail_closed (BLOCK)",
+        "Every verdict is explainable and auditable"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Both directions",
+      "items": [
+        "Input guard inspects the prompt before the AI",
+        "Output guard inspects the response before the user",
+        "Same pipeline, two directions"
+      ]
+    }
+  ]
+}
